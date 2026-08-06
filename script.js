@@ -1,3 +1,69 @@
+const API_URL = "https://special-invention-r4p49pvx7p5rcx776-3000.app.github.dev/api/products";
+ 
+// Fungsi untuk menampilkan satu produk sebagai kartu HTML
+function buatKartuProduk(item) {
+  const kartu = document.createElement("div");
+  kartu.className = "bg-white rounded-xl shadow hover:shadow-lg transition p-4";
+  kartu.innerHTML = `
+    <div class="w-full h-40 bg-gray-100 rounded-lg mb-3 flex items-center
+                justify-center text-gray-400 text-sm">Belum ada gambar</div>
+    <h4 class="font-semibold text-gray-800">${item.nama}</h4>
+    <p class="text-blue-700 font-bold mt-1">Rp ${item.harga.toLocaleString("id-ID")}</p>
+    <button class="w-full mt-3 bg-blue-700 text-white py-2 rounded-lg text-sm
+                   btn-tambah-keranjang">Tambah ke Keranjang</button>
+  `;
+  return kartu;
+}
+
+const gridKatalog = document.getElementById("grid-katalog");
+const formProduk = document.getElementById("form-produk");
+
+async function muatProduk() {
+  gridKatalog.innerHTML = `<p>Memuat produk...</p>`;
+
+  try {
+    const response = await fetch(API_URL);
+    const hasil = await response.json();
+
+    gridKatalog.innerHTML = "";
+
+    // kalau backend mengembalikan { data: [...] }
+    hasil.data.forEach((item) => {
+      gridKatalog.appendChild(buatKartuProduk(item));
+    });
+
+  } catch (error) {
+    console.error(error);
+    gridKatalog.innerHTML = `<p>Gagal memuat produk</p>`;
+  }
+}
+
+muatProduk();
+
+// Mengganti yang sudah ada (Replace Existing)
+formProduk.addEventListener("submit", async (event) => {
+  event.preventDefault();
+ 
+  const nama = document.querySelector("#input-nama").value.trim();
+  const harga = Number(document.querySelector("#input-harga").value);
+ 
+  if (nama === "" || harga <= 0) {
+    pesanError.textContent = "Nama produk dan harga (lebih dari 0) wajib diisi.";
+    pesanError.classList.remove("hidden");
+    return;
+  }
+  pesanError.classList.add("hidden");
+ 
+  // Mengirim data produk baru ke backend
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nama, harga }),
+  });
+ 
+  formProduk.reset();
+  muatProduk(); // memuat ulang data terbaru dari database
+});
 // let digunakan untuk nilai ynag bisa berubah
 let jumlahKeranjang = 0;
 
@@ -34,30 +100,16 @@ tombolHamburger.addEventListener("click",()=>{
     menuMobile.classList.toggle("hidden");
 });
 
-const formProduk = document.querySelector("#form-produk");
-// beri id "grid-katalog" pada <div grid> di Catalog UI
-const gridKatalog = document.querySelector("#grid-katalog");
+
 const pesanError = document.querySelector("#pesan-error");
 
-// Tentukan base URL API secara dinamis:
-// - Jika dijalankan di Codespaces / GitHub.dev, gunakan origin saat ini
-// - Jika dijalankan lokal, pakai localhost:3000
-const API_BASE = (() => {
-  const hostIsCodespace = location.hostname.includes("app.github.dev") || location.hostname.includes("github.dev");
-  const base = hostIsCodespace ? `${location.protocol}//${location.hostname}` : "http://localhost:3000";
-  return base.replace(/\/+$/, "");
-})();
-
-console.log("API_BASE:", API_BASE);
-
-formProduk.addEventListener("submit", (event) => {
+formProduk.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const nama = document.querySelector("#input-nama").value.trim();
-  const harga = document.querySelector("#input-harga").value;
+  const harga = Number(document.querySelector("#input-harga").value);
 
-  // validasi sederhana
-  if (nama === "" || harga === "" || Number(harga) <= 0) {
+  if (nama === "" || harga <= 0) {
     pesanError.textContent = "Nama produk dan harga (lebih dari 0) wajib diisi.";
     pesanError.classList.remove("hidden");
     return;
@@ -65,38 +117,14 @@ formProduk.addEventListener("submit", (event) => {
 
   pesanError.classList.add("hidden");
 
-  // Kirim data ke API (pilih base otomatis untuk Codespaces / lokal)
-  fetch(`${API_BASE}/api/products`, {
+  await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nama, harga: Number(harga) }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data && data.status === "success") {
-        const produk = data.data;
-        const kartuBaru = document.createElement("div");
-        kartuBaru.className = "bg-white rounded-xl shadow hover:shadow-lg transition p-4";
+    body: JSON.stringify({ nama, harga }),
+  });
 
-        kartuBaru.innerHTML = `
-          <div class="w-full h-40 bg-gray-100 rounded-lg mb-3 flex items-center justify-center text-gray-400 text-sm">Belum ada gambar</div>
-          <h4 class="font-semibold text-gray-800">${produk.nama}</h4>
-          <p class="text-blue-700 font-bold mt-1">Rp ${Number(produk.harga).toLocaleString("id-ID")}</p>
-          <button class="w-full mt-3 bg-blue-700 text-white py-2 rounded-lg text-sm btn-tambah-keranjang">Tambah ke Keranjang</button>
-        `;
-
-        gridKatalog.appendChild(kartuBaru);
-        formProduk.reset();
-      } else {
-        pesanError.textContent = data && data.message ? data.message : "Terjadi kesalahan saat menyimpan produk.";
-        pesanError.classList.remove("hidden");
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      pesanError.textContent = "Gagal menghubungi server. Pastikan backend berjalan di http://localhost:3000";
-      pesanError.classList.remove("hidden");
-    });
+  formProduk.reset();
+  muatProduk();
 });
 
 let totalKeranjang = 0;

@@ -5,7 +5,8 @@
   "main": "script.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "setup": "bash ../npm-script.sh"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,8 @@
   },
   "homepage": "https://github.com/Arakecekerenistriluffy/Toko-Hoki#readme",
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   },
   "devDependencies": {
