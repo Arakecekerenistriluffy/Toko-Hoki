@@ -40,30 +40,6 @@ async function muatProduk() {
 
 muatProduk();
 
-// Mengganti yang sudah ada (Replace Existing)
-formProduk.addEventListener("submit", async (event) => {
-  event.preventDefault();
- 
-  const nama = document.querySelector("#input-nama").value.trim();
-  const harga = Number(document.querySelector("#input-harga").value);
- 
-  if (nama === "" || harga <= 0) {
-    pesanError.textContent = "Nama produk dan harga (lebih dari 0) wajib diisi.";
-    pesanError.classList.remove("hidden");
-    return;
-  }
-  pesanError.classList.add("hidden");
- 
-  // Mengirim data produk baru ke backend
-  await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nama, harga }),
-  });
- 
-  formProduk.reset();
-  muatProduk(); // memuat ulang data terbaru dari database
-});
 // let digunakan untuk nilai ynag bisa berubah
 let jumlahKeranjang = 0;
 
